@@ -1,0 +1,1 @@
+# si on utilise Gradio, pour se co à Postgres : engine = create_engine('postgresql://username:password@host:port/database_name')
