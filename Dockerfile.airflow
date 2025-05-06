@@ -1,0 +1,2 @@
+# Utiliser l'image officielle d'Airflow comme base
+FROM apache/airflow:2.7.1
