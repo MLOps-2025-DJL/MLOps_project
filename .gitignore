@@ -1,0 +1,25 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Vscode
+*.DS_Store
+
+
+# Ignorer les logs Airflow
+airflow/logs/
+
+
+__pycache__/
+*.pyc
+.idea/
+.DS_Store
+*.log
