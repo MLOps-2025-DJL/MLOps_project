@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/awand/Documents/MLOps_project/src/models/mlruns/0/bb319ffe6b48495f9c3226e6cef2f8e1/artifacts
+end_time: 1746921421634
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: bb319ffe6b48495f9c3226e6cef2f8e1
+run_name: big-yak-127
+run_uuid: bb319ffe6b48495f9c3226e6cef2f8e1
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1746921416235
+status: 4
+tags: []
+user_id: awand

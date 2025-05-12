@@ -113,7 +113,7 @@ services:
       - ./airflow/scripts:/opt/airflow/scripts
       - ./airflow/data:/opt/airflow/data
     ports:
-      - "8080:8080"
+      - "8088:8080"
     command: webserver
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
