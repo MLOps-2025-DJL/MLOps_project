@@ -1,8 +1,6 @@
-FROM apache/airflow:2.7.1-python3.10
+FROM python:3.10-slim
 
-WORKDIR /opt/airflow
-
-USER root
+WORKDIR /base
 
 # Installer les dépendances système nécessaires
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -12,10 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-
-USER airflow
-
+# Copier les fichiers requirements.txt
 COPY requirements.txt .
 
+# Mettre à jour pip et installer les dépendances
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt

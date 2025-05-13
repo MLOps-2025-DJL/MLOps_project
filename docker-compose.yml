@@ -1,4 +1,8 @@
 services:
+  base-image:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
   # PostgreSQL (pour Airflow et stockage de métadonnées)
   postgres:
     image: postgres:15
@@ -44,11 +48,29 @@ services:
       /bin/sh -c "
       sleep 10 &&
       mc config host add myminio http://minio:9000 minioadmin minioadmin &&
-      mc mb myminio/models || true &&
-      mc mb myminio/images || true &&
-      exit 0
+      mc mb -p myminio/models || true &&
+      mc mb -p myminio/data || true
       "
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    volumes:
+      - ./src/api:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: always
   # MLflow
   mlflow:
     build:
@@ -84,9 +106,8 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/scripts:/opt/airflow/scripts
-      - ./airflow/data:/opt/airflow/data
     entrypoint: /bin/bash
-    command: -c "mkdir -p /opt/airflow/dags /opt/airflow/logs/scheduler /opt/airflow/logs/webserver /opt/airflow/plugins /opt/airflow/scripts /opt/airflow/data && chmod -R 777 /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins /opt/airflow/scripts /opt/airflow/data"
+    command: -c "mkdir -p /opt/airflow/dags /opt/airflow/logs/scheduler /opt/airflow/logs/webserver /opt/airflow/plugins /opt/airflow/scripts /opt/airflow/data && chmod -R 777 /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins /opt/airflow/scripts"
 
   # Airflow components avec image personnalisée
   airflow-webserver:
@@ -111,7 +132,6 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/scripts:/opt/airflow/scripts
-      - ./airflow/data:/opt/airflow/data
     ports:
       - "8088:8080"
     command: webserver
@@ -144,7 +164,6 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/scripts:/opt/airflow/scripts
-      - ./airflow/data:/opt/airflow/data
     command: scheduler
     restart: always
 
@@ -164,7 +183,6 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
-      - ./airflow/data:/opt/airflow/data
     entrypoint: /bin/bash
     command: -c "airflow db init && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
 

@@ -1,5 +1,4 @@
 tensorflow==2.13.0
-keras==2.13.1
 fastai==2.7.12
 torch==2.0.1
 torchvision==0.15.2
@@ -11,7 +10,12 @@ tqdm
 requests
 pillow
 scikit-learn
+fastapi
+uvicorn
+python-multipart
 pandas==1.5.3
 numpy==1.24.3
 matplotlib
 fastcore==1.5.29
+pymysql
+
