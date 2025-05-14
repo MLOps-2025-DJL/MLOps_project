@@ -18,4 +18,4 @@ numpy==1.24.3
 matplotlib
 fastcore==1.5.29
 pymysql
-
+python-dotenv
