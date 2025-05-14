@@ -1,0 +1,8 @@
+FROM base
+
+WORKDIR /app
+
+EXPOSE 5000
+
+# Définir la commande par défaut
+CMD ["mlflow", "server", "--host", "0.0.0.0"]
