@@ -1,10 +1,11 @@
 services:
-  # PostgreSQL (pour Airflow et stockage de métadonnées)
   postgres:
     image: postgres:15
+    env_file: .env
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-plants_db}
     ports:
       - "5432:5432"
     volumes:
@@ -16,15 +17,15 @@ services:
       retries: 5
     restart: always
 
-  # MinIO (S3 compatible storage)
   minio:
     image: minio/minio:latest
+    env_file: .env
+    environment:
+      - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID}
+      - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY}
     ports:
       - "9000:9000"
       - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
@@ -35,49 +36,49 @@ services:
       retries: 3
     restart: always
 
-  # MinIO Client (pour créer les buckets initiaux)
   minio-client:
     image: minio/mc:latest
+    env_file: .env
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c "
       sleep 10 &&
-      mc config host add myminio http://minio:9000 minioadmin minioadmin &&
+      mc config host add myminio http://minio:9000 $${AWS_ACCESS_KEY_ID} $${AWS_SECRET_ACCESS_KEY} &&
       mc mb myminio/models || true &&
       mc mb myminio/images || true &&
       exit 0
       "
 
-  # MLflow
   mlflow:
     build:
       context: .
       dockerfile: Dockerfile.mlflow
+    env_file: .env
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
     ports:
       - "5000:5000"
-    environment:
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
-      - MLFLOW_TRACKING_URI=postgresql://postgres:postgres@postgres:5432/mlflow
     command: >
-      mlflow server 
-      --backend-store-uri postgresql://postgres:postgres@postgres:5432/mlflow 
-      --default-artifact-root s3://models/ 
+      mlflow server
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/mlflow
+      --default-artifact-root s3://models/
       --host 0.0.0.0
     depends_on:
       postgres:
         condition: service_healthy
       minio:
-        condition: service_healthy   
+        condition: service_healthy
     restart: always
 
-  # Container d'initialisation pour préparer les répertoires
   airflow-init-dirs:
     build:
       context: .
       dockerfile: Dockerfile.airflow
+    env_file: .env
     user: root
     volumes:
       - ./airflow/dags:/opt/airflow/dags
@@ -88,24 +89,24 @@ services:
     entrypoint: /bin/bash
     command: -c "mkdir -p /opt/airflow/dags /opt/airflow/logs/scheduler /opt/airflow/logs/webserver /opt/airflow/plugins /opt/airflow/scripts /opt/airflow/data && chmod -R 777 /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins /opt/airflow/scripts /opt/airflow/data"
 
-  # Airflow components avec image personnalisée
   airflow-webserver:
     build:
       context: .
       dockerfile: Dockerfile.airflow
+    env_file: .env
     depends_on:
       - postgres
       - airflow-init-dirs
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
       - AIRFLOW_HOME=/opt/airflow
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - MLFLOW_API=${MLFLOW_API}
+      - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -126,19 +127,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.airflow
+    env_file: .env
     depends_on:
       - postgres
       - airflow-init-dirs
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
       - AIRFLOW_HOME=/opt/airflow
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - MLFLOW_API=${MLFLOW_API}
+      - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -152,12 +154,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.airflow
+    env_file: .env
     depends_on:
       - postgres
       - airflow-init-dirs
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__RBAC=True
     volumes:

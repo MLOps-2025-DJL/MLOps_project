@@ -13,10 +13,8 @@ venv.bak/
 # Vscode
 *.DS_Store
 
-
 # Ignorer les logs Airflow
 airflow/logs/
-
 
 __pycache__/
 *.pyc

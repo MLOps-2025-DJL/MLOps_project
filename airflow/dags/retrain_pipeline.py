@@ -27,12 +27,6 @@ with DAG(
         bash_command='python3 /opt/airflow/scripts/download.py'
     )
 
-    sync_images = BashOperator(
-        task_id="sync_images_from_minio",
-        bash_command="python3 /opt/airflow/scripts/sync_minio.py",
-        dag=dag,
-    )
-
     # 2. Réentraîner le modèle avec les nouvelles données
     train_task = BashOperator(
         task_id='retrain_model',
@@ -42,4 +36,4 @@ with DAG(
     # (Optionnel) 3. Ajouter d’autres étapes ici comme une notification ou un déploiement
 
     # Définir l'ordre des tâches
-    download_task >> sync_images >> train_task
+    download_task >> train_task

@@ -4,18 +4,26 @@ from tqdm import tqdm
 import psycopg2
 from minio import Minio
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
 
 # Connexion PostgreSQL
 conn = psycopg2.connect(
-    dbname="plants_db", user="postgres", password="postgres", host="postgres", port="5432"
+    dbname=os.getenv("POSTGRES_DB"),
+    user=os.getenv("POSTGRES_USER"),
+    password=os.getenv("POSTGRES_PASSWORD"),
+    host=os.getenv("POSTGRES_HOST"),
+    port=os.getenv("POSTGRES_PORT")
 )
 cursor = conn.cursor()
 
 # Connexion MinIO
 client = Minio(
-    "minio:9000",
-    access_key="minioadmin",
-    secret_key="minioadmin",
+    os.getenv("MLFLOW_S3_ENDPOINT_URL").replace("http://", ""),  # Enlève le protocole pour Minio
+    access_key=os.getenv("AWS_ACCESS_KEY_ID"),
+    secret_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
     secure=False
 )
 
@@ -24,30 +32,39 @@ bucket_name = "images"
 if not client.bucket_exists(bucket_name):
     client.make_bucket(bucket_name)
 
-# Répertoire temporaire de téléchargement
-download_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "", "data", "downloaded"))
-os.makedirs(download_dir, exist_ok=True)
-
+# Récupération des données
 cursor.execute("SELECT id, url_source, label FROM plants_data;")
 data = cursor.fetchall()
 
+# Upload direct dans MinIO sans stockage local
 for row in tqdm(data):
     img_id, url, label = row
-    filename = f"{label}/{img_id:08d}.jpg"
-    local_path = os.path.join(download_dir, filename)
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    object_name = f"{label}/{img_id:08d}.jpg"
 
-    # Téléchargement image
-    if not os.path.exists(local_path):
-        try:
-            r = requests.get(url, timeout=5)
-            with open(local_path, 'wb') as f:
-                f.write(r.content)
-        except Exception as e:
-            print(f"Erreur de téléchargement : {url} => {e}")
-            continue
+    # Vérifie si l'objet existe déjà
+    found = False
+    try:
+        client.stat_object(bucket_name, object_name)
+        found = True
+    except:
+        pass
 
-    # Upload MinIO
-    client.fput_object(bucket_name, filename, local_path)
+    if found:
+        continue
 
-print("\u2705 Toutes les images ont été téléchargées et uploadées sur MinIO")
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            image_stream = BytesIO(response.content)
+            client.put_object(
+                bucket_name,
+                object_name,
+                image_stream,
+                length=len(response.content),
+                content_type="image/jpeg"
+            )
+    except Exception as e:
+        print(f"Erreur : {url} => {e}")
+        continue
+
+print("✅ Toutes les images ont été envoyées dans MinIO sans stockage local.")

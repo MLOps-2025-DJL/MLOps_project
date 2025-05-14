@@ -12,9 +12,16 @@ RUN pip install --no-cache-dir \
     mlflow==2.8.1 \
     psycopg2-binary \
     boto3 \
-    pymysql
+    pymysql \
+    python-dotenv
 
 EXPOSE 5000
 
 # Définition de la commande par défaut, qui sera remplacée dans docker-compose
 CMD ["mlflow", "server", "--host", "0.0.0.0"]
+
+
+
+
+
+
