@@ -53,7 +53,7 @@ services:
     entrypoint: >
       /bin/sh -c "
       sleep 10 &&
-      mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc config host add myminio ${MLFLOW_S3_ENDPOINT_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
       mc mb -p myminio/models || true &&
       mc mb -p myminio/data || true
       "
@@ -128,7 +128,7 @@ services:
     environment:
       - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR}
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN}
-      - AIRFLOW__CORE__LOAD_EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES}
+      - AIRFLOW__CORE__LOAD__EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES}
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
       - AIRFLOW_HOME=/opt/airflow
       - MLFLOW_TRACKING_URI=${MLFLOW_API}
@@ -190,7 +190,7 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
     entrypoint: /bin/bash
-    command: -c "airflow db init && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
+    command: -c "airflow db init && airflow users create --username ${AIRFLOW_USER} --password ${AIRFLOW_PASS} --firstname ${AIRFLOW_FIRST_NAME} --lastname ${AIRFLOW_LAST_NAME} --role ${AIRFLOW_ROLE} --email ${AIRFLOW_EMAIL}"
 
 volumes:
   postgres-db-volume:
