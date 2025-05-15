@@ -7,14 +7,13 @@ load_dotenv()
 
 # === Configuration ===
 MODEL_FILENAME = "export.pkl"
-LOCAL_MODEL_DIR = os.path.abspath("saved_models")
 MODEL_PATH = "/opt/airflow/scripts/saved_models/export.pkl"
 
-MINIO_ENDPOINT = os.getenv("MLFLOW_S3_ENDPOINT_URL", "http://minio:9000").replace("http://", "")
-ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID", "minioadmin")
-SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "minioadmin")
+MINIO_ENDPOINT = os.getenv("MLFLOW_S3_ENDPOINT_URL").replace("http://", "")
+ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 BUCKET_NAME = "models"
-OBJECT_NAME = MODEL_FILENAME  # You can add versioning here if needed
+OBJECT_NAME = MODEL_FILENAME
 
 # === Check if model file exists ===
 if not os.path.exists(MODEL_PATH):
