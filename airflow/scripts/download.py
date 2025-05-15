@@ -5,6 +5,7 @@ import psycopg2
 from minio import Minio
 from urllib.parse import urlparse
 from dotenv import load_dotenv
+from io import BytesIO
 
 # Charger les variables d'environnement depuis .env
 load_dotenv()
@@ -18,6 +19,46 @@ conn = psycopg2.connect(
     port=os.getenv("POSTGRES_PORT")
 )
 cursor = conn.cursor()
+
+# Create a table if not exist
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS plants_data (
+        id SERIAL PRIMARY KEY,
+        url_source TEXT NOT NULL,
+        url_s3 TEXT NOT NULL,
+        label TEXT CHECK(label IN ('dandelion', 'grass')) NOT NULL
+    );
+""")
+
+# Teplates of URLs
+source_url_template = "https://raw.githubusercontent.com/btphan95/greenr-airflow/refs/heads/master/data/{label}/{index:08d}.jpg"
+s3_url_template = "https://mlops-plants-data.s3.amazonaws.com/{label}/{index:08d}.jpg"
+
+# Labels and index
+labels = ["dandelion", "grass"]
+num_images = 200  # 200 imágenes por categoría
+
+# Insert data on PostgreSQL
+for label in labels:
+    for index in range(num_images):
+        url_source = source_url_template.format(label=label, index=index)
+        url_s3 = s3_url_template.format(label=label, index=index)
+        
+        # Verificar si ya existe para no duplicar
+        cursor.execute(
+            "SELECT 1 FROM plants_data WHERE url_s3 = %s LIMIT 1;",
+            (url_s3,)
+        )
+        exists = cursor.fetchone()
+        
+        if not exists:
+            cursor.execute(
+                "INSERT INTO plants_data (url_source, url_s3, label) VALUES (%s, %s, %s)",
+                (url_source, url_s3, label)
+            )
+
+# Valider les changements
+conn.commit()
 
 # Connexion MinIO
 client = Minio(
