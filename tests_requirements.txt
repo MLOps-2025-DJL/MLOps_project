@@ -1,0 +1,12 @@
+# Dépendances pour les tests
+pytest==7.4.0
+pytest-cov==4.1.0
+fastapi==0.101.1
+uvicorn==0.23.2
+python-multipart==0.0.6
+httpx==0.24.1
+pillow==10.0.0
+boto3==1.28.20
+fastai==2.7.12
+python-dotenv==1.0.0
+numpy==1.25.2

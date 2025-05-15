@@ -75,7 +75,10 @@ def load_model():
     return load_learner(model_bytes)
 
 def predict_image(image, model):
-    class_name, _, probs = model.predict(image)
+    result = model.predict(image)
+    if not isinstance(result, tuple) or len(result) != 3:
+        raise ValueError(f"Unexpected prediction output: {result}")
+    class_name, _, probs = result
     confidence = probs.max().item()
     return class_name, confidence
 
@@ -95,5 +98,9 @@ async def predict(file: UploadFile = File(...)):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid image file")
 
-    class_name, confidence = predict_image(image, model)
+    try:
+        class_name, confidence = predict_image(image, model)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
     return {"prediction": class_name, "probability": confidence}
