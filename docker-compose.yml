@@ -33,7 +33,7 @@ services:
       - MINIO_CONSOLE_PORT=${MINIO_CONSOLE_PORT}
     ports:
       - "9000:9000"
-      - "${MINIO_CONSOLE_PORT}:9001"
+      - "${MINIO_CONSOLE_PORT}:9003"
     command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     volumes:
       - minio-data:/data
@@ -80,6 +80,19 @@ services:
         condition: service_healthy
     restart: always
 
+  # Gradio 
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+    ports:
+      - "7860:7860"
+    volumes:
+    #only for development
+      - ./src/webapp:/app
+    command: python /app/web.py
+    restart: always
+
   # MLflow
   mlflow:
     build:
@@ -87,7 +100,7 @@ services:
       dockerfile: Dockerfile.mlflow
     env_file: .env
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}

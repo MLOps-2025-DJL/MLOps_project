@@ -1,21 +1,30 @@
-name: Continuous Deployment
+name: CI
 
 on:
   push:
     branches:
       - main
       - dev
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Build Docker image
         run: |
           docker build -f Dockerfile.base -t base .
-      - name: Deploy with Docker Compose
+
+      - name: Run tests inside Docker
         run: |
-          docker compose up -d
+          docker run --rm base pytest tests/
+
+      - name: Check code quality inside Docker
+        run: |
+          docker run --rm base flake8 src/ tests/

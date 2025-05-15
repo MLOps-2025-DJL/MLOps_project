@@ -6,7 +6,6 @@ import io
 import os
 import logging
 from dotenv import load_dotenv
-import logging
 import torchvision.transforms as transforms
 import torch
 import boto3

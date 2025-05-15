@@ -19,3 +19,5 @@ matplotlib
 fastcore==1.5.29
 pymysql
 python-dotenv
+gradio
+Pillow
