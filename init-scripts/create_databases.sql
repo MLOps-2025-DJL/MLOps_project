@@ -1,2 +1,0 @@
-CREATE DATABASE airflow;
-CREATE DATABASE mlflow;
