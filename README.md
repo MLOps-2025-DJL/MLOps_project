@@ -11,7 +11,7 @@ Stacks utilisées :
 - Minio en guise de AWS S3
 - Postgres pour bdd
 - Elasticsearch & Kibana pour le monitoring
-- FastAI pour Deep learning frameworks 
+- ? pour Deep learning frameworks 
 - MLflow pour ML Metadata Store 
-- FastAPI pour API
+- ? pour API
 - Docker pour conteneurisation 
