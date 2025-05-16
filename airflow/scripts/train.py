@@ -45,7 +45,7 @@ def download_minio_dataset(bucket_name="images", local_dir="/tmp/images"):
 
 def main():
     # Configuration MLflow via variables d'environnement
-    mlflow.set_tracking_uri(os.getenv("http://mlflow:5000"))
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_API"))
     mlflow.set_experiment("classification_dandelion_grass_fastai")
 
     # Données depuis MinIO
