@@ -21,3 +21,5 @@ pymysql
 python-dotenv
 gradio
 Pillow
+pytest
+flake8
