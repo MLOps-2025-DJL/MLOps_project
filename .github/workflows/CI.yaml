@@ -23,9 +23,7 @@ jobs:
           docker build -f Dockerfile.base -t base .
 
       - name: Run tests inside Docker
-        run: |
-          docker run --rm base pytest src/ app/
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app base pytest src/
 
       - name: Check code quality inside Docker
-        run: |
-          docker run --rm base flake8 src/ app/
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app base flake8 src/
