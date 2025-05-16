@@ -24,8 +24,8 @@ jobs:
 
       - name: Run tests inside Docker
         run: |
-          docker run --rm base pytest /app/
+          docker run --rm base pytest src/ app/
 
       - name: Check code quality inside Docker
         run: |
-          docker run --rm base flake8 src/ /app/
+          docker run --rm base flake8 src/ app/
