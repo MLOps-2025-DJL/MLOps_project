@@ -19,7 +19,7 @@ def prediction(img: Union[Image.Image, None]) -> str:
     img.save(img_bytes, format="PNG")
     img_bytes.seek(0)
     
-    api_url = "http://api:8000/predict"
+    api_url = "http://localhost:8000/predict"
     files = {"file": ("image.png", img_bytes, "image/png")}
     try:
         response = requests.post(api_url, files=files)
