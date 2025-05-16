@@ -8,7 +8,7 @@ from PIL import Image
 import tempfile
 
 # Import du script à tester
-from airflow.scripts.train import download_minio_dataset, main
+from train import download_minio_dataset, main
 
 
 # === FIXTURES ===
@@ -16,27 +16,27 @@ from airflow.scripts.train import download_minio_dataset, main
 @pytest.fixture
 def mock_minio():
     """Mock MinIO client"""
-    with patch('airflow.scripts.train.Minio') as mock:
+    with patch('train.Minio') as mock:
         yield mock
 
 @pytest.fixture
 def mock_mlflow():
     """Mock complet de MLflow"""
-    with patch('airflow.scripts.train.mlflow.set_tracking_uri'), \
-         patch('airflow.scripts.train.mlflow.set_experiment'), \
-         patch('airflow.scripts.train.mlflow.start_run'), \
-         patch('airflow.scripts.train.mlflow.log_params'), \
-         patch('airflow.scripts.train.mlflow.log_metrics'), \
-         patch('airflow.scripts.train.mlflow.log_artifact'), \
-         patch('airflow.scripts.train.mlflow.register_model'), \
-         patch('airflow.scripts.train.MlflowClient'):
+    with patch('train.mlflow.set_tracking_uri'), \
+         patch('train.mlflow.set_experiment'), \
+         patch('train.mlflow.start_run'), \
+         patch('train.mlflow.log_params'), \
+         patch('train.mlflow.log_metrics'), \
+         patch('train.mlflow.log_artifact'), \
+         patch('train.mlflow.register_model'), \
+         patch('train.MlflowClient'):
         yield
 
 @pytest.fixture
 def mock_fastai():
     """Mock fastai DataLoaders et Learner"""
-    with patch('airflow.scripts.train.ImageDataLoaders.from_folder'), \
-         patch('airflow.scripts.train.cnn_learner') as mock_learner:
+    with patch('train.ImageDataLoaders.from_folder'), \
+         patch('train.cnn_learner') as mock_learner:
         learner = MagicMock()
         learner.validate.return_value = [None, 0.92]
         learner.get_preds.return_value = (
@@ -100,7 +100,7 @@ def test_main_flow(mock_minio, mock_mlflow, mock_fastai):
     mock_fastai.export.assert_called_once()
 
 def test_minio_connection_error():
-    with patch('airflow.scripts.train.Minio', side_effect=Exception("Connection failed")):
+    with patch('train.Minio', side_effect=Exception("Connection failed")):
         with pytest.raises(Exception, match="Connection failed"):
             download_minio_dataset()
 
@@ -109,22 +109,22 @@ def test_metric_calculation(mock_fastai, mock_mlflow):
         torch.tensor([[0.8, 0.2], [0.3, 0.7]]),
         torch.tensor([0, 1])
     )
-    with patch('airflow.scripts.train.download_minio_dataset'), \
-         patch('airflow.scripts.train.mlflow.log_metrics') as mock_log, \
-         patch('airflow.scripts.train.mlflow.start_run'), \
-         patch('airflow.scripts.train.mlflow.set_tracking_uri'), \
-         patch('airflow.scripts.train.mlflow.set_experiment'), \
-         patch('airflow.scripts.train.mlflow.log_params'), \
-         patch('airflow.scripts.train.mlflow.log_artifact'), \
-         patch('airflow.scripts.train.mlflow.register_model'), \
-         patch('airflow.scripts.train.MlflowClient'):
+    with patch('train.download_minio_dataset'), \
+         patch('train.mlflow.log_metrics') as mock_log, \
+         patch('train.mlflow.start_run'), \
+         patch('train.mlflow.set_tracking_uri'), \
+         patch('train.mlflow.set_experiment'), \
+         patch('train.mlflow.log_params'), \
+         patch('train.mlflow.log_artifact'), \
+         patch('train.mlflow.register_model'), \
+         patch('train.MlflowClient'):
         main()
         metrics = mock_log.call_args[0][0]
         assert "precision" in metrics
         assert 0 <= metrics["precision"] <= 1
 
 def test_tempdir_cleanup_on_error():
-    with patch('airflow.scripts.train.Minio') as mock_minio:
+    with patch('train.Minio') as mock_minio:
         mock_minio.return_value.list_objects.side_effect = Exception("Boom")
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch('tempfile.mkdtemp', return_value=temp_dir):
