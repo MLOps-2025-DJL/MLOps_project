@@ -3,12 +3,7 @@ import requests
 from tqdm import tqdm
 import psycopg2
 from minio import Minio
-from urllib.parse import urlparse
-from dotenv import load_dotenv
 from io import BytesIO
-
-# Charger les variables d'environnement depuis .env
-#load_dotenv()
 
 # Connexion PostgreSQL
 conn = psycopg2.connect(
@@ -16,16 +11,18 @@ conn = psycopg2.connect(
     user=os.getenv("POSTGRES_USER"),
     password=os.getenv("POSTGRES_PASSWORD"),
     host=os.getenv("POSTGRES_HOST"),
-    port=os.getenv("POSTGRES_PORT")
+    port=os.getenv("POSTGRES_PORT"),
 )
 cursor = conn.cursor()
 
 # Connexion MinIO
 client = Minio(
-    os.getenv("MLFLOW_S3_ENDPOINT_URL").replace("http://", ""),  # Enlève le protocole pour Minio
+    os.getenv("MLFLOW_S3_ENDPOINT_URL").replace(
+        "http://", ""
+    ),  # Enlève le protocole pour Minio
     access_key=os.getenv("AWS_ACCESS_KEY_ID"),
     secret_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    secure=False
+    secure=False,
 )
 
 # Bucket d’images
@@ -47,7 +44,7 @@ for row in tqdm(data):
     try:
         client.stat_object(bucket_name, object_name)
         found = True
-    except:
+    except Exception:
         pass
 
     if found:
@@ -62,7 +59,7 @@ for row in tqdm(data):
                 object_name,
                 image_stream,
                 length=len(response.content),
-                content_type="image/jpeg"
+                content_type="image/jpeg",
             )
     except Exception as e:
         print(f"Erreur : {url} => {e}")
