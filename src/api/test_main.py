@@ -10,11 +10,8 @@ import numpy as np
 import boto3
 from datetime import datetime
 
-# Ajouter le chemin racine au path Python pour pouvoir importer les modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
 # Import le module à tester
-from src.api.main import app, find_latest_model, load_model, predict_image
+from main import app, find_latest_model, load_model, predict_image
 
 # Créer un client de test
 client = TestClient(app)
@@ -27,7 +24,7 @@ class TestMainPy(unittest.TestCase):
         self.mock_s3 = self.patcher_s3.start()
         
         # Mock pour load_learner
-        self.patcher_load_learner = patch('src.api.main.load_learner')
+        self.patcher_load_learner = patch('main.load_learner')
         self.mock_load_learner = self.patcher_load_learner.start()
         
         # Mock pour Image.open
@@ -87,7 +84,7 @@ class TestMainPy(unittest.TestCase):
     
     def test_load_model(self):
         # Mock pour find_latest_model
-        with patch('src.api.main.find_latest_model') as mock_find_latest:
+        with patch('main.find_latest_model') as mock_find_latest:
             mock_find_latest.return_value = {
                 'Bucket': 'test-bucket',
                 'Key': 'model.pkl',
@@ -133,13 +130,13 @@ class TestMainPy(unittest.TestCase):
         self.assertEqual(confidence, 0.95)
         mock_model.predict.assert_called_once_with(test_image)
     
-    @patch('src.api.main.predict_image')
+    @patch('main.predict_image')
     def test_predict_endpoint_success(self, mock_predict):
         # Configurer les mocks
         mock_predict.return_value = ('cat', 0.95)
         
         # Simuler un modèle chargé
-        with patch('src.api.main.model', MagicMock()):
+        with patch('main.model', MagicMock()):
             # Créer une image de test
             test_image = Image.new('RGB', (100, 100))
             img_byte_arr = io.BytesIO()
@@ -160,8 +157,8 @@ class TestMainPy(unittest.TestCase):
     
     def test_predict_endpoint_no_model(self):
         # Simuler l'absence de modèle et une erreur lors du chargement
-        with patch('src.api.main.model', None), \
-             patch('src.api.main.load_model', side_effect=Exception("Test error")):
+        with patch('main.model', None), \
+             patch('main.load_model', side_effect=Exception("Test error")):
             
             # Créer une image de test
             test_image = Image.new('RGB', (100, 100))
@@ -182,7 +179,7 @@ class TestMainPy(unittest.TestCase):
     
     def test_predict_endpoint_invalid_image(self):
         # Simuler un modèle chargé
-        with patch('src.api.main.model', MagicMock()), \
+        with patch('main.model', MagicMock()), \
             patch('PIL.Image.open', side_effect=IOError("cannot identify image file")):
             # Créer un fichier invalide comme image
             invalid_data = io.BytesIO(b"not an image")
@@ -207,7 +204,7 @@ class TestMainPy(unittest.TestCase):
 
         # Patch image opening to return the real image
         with patch('PIL.Image.open', return_value=test_image), \
-            patch('src.api.main.model') as mock_model:
+            patch('main.model') as mock_model:
 
             # Mock model.predict to return an unexpected result (e.g., an empty tuple)
             mock_model.predict.return_value = ()

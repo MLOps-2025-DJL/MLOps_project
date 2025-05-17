@@ -17,10 +17,11 @@ Stacks utilisées :
 - Docker pour conteneurisation 
 
 1. Configuration
-copier le fichier .env.example dans votre dossier en local et remplir les variables
+Copier le fichier .env.example dans votre dossier en local et remplir les variables
 
-2. Lancement avec les images Docker disponibles sur Docker Hub 
-2.1 Utilisez le fichier docker-compose.prod.yml à laide de la commande : docker compose -f docker-compose.prod.yml up -d  
+2. Environnement de Production : Lancement avec les images Docker disponibles sur Docker Hub 
+2.1 Utilisez le fichier docker-compose.prod.yml à l'aide de la commande : 
+docker compose -f docker-compose.prod.yml up -d  
 2.2 Lancez le DAG dans l’interface Airflow : http://localhost:8088  
 2.3 Accédez aux différents services :  
     Webapp Gradio : http://localhost:7860  
@@ -29,10 +30,12 @@ copier le fichier .env.example dans votre dossier en local et remplir les variab
     MinIO : http://localhost:9003  
     Airflow : http://localhost:8088  
 
-3. Fonctionnement en local en construisant les images docker   
-3.1⁠ ⁠Construire l'image Docker de base à l'aide la commande : docker build -f Dockerfile.base -t base .  
-3.2⁠ ⁠Démarrer les services avec Docker Compose : docker compose up -d  
+3. Environnement de Developpement : Fonctionnement en local en construisant les images docker   
+3.1⁠ ⁠Construire l'image Docker de base à l'aide la commande : 
+docker build -f Dockerfile.base -t base .  
+3.2⁠ ⁠Démarrer les services avec Docker Compose : 
+docker compose up -d  
 3.⁠ ⁠Lancer le DAG dans Airflow  
-Ouvre l’interface web d’Airflow (accessible à l’adresse http://localhost:8088). Lancee le DAG et accéder aux services indiqués plus haut  
+Ouvre l’interface web d’Airflow (accessible à l’adresse http://localhost:8088). Lancer le DAG et accéder aux services indiqués plus haut  
 
 

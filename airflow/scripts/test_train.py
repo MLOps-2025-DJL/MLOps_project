@@ -6,7 +6,7 @@ import torch
 from PIL import Image
 import tempfile
 
-from airflow.scripts.train import download_minio_dataset, main
+from train import download_minio_dataset, main
 
 
 # === FIXTURES ===
@@ -14,30 +14,30 @@ from airflow.scripts.train import download_minio_dataset, main
 
 @pytest.fixture
 def mock_minio():
-    with patch("airflow.scripts.train.Minio") as mock:
+    with patch("train.Minio") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_mlflow():
-    with patch("airflow.scripts.train.mlflow.set_tracking_uri"), patch(
-        "airflow.scripts.train.mlflow.set_experiment"
-    ), patch("airflow.scripts.train.mlflow.start_run"), patch(
-        "airflow.scripts.train.mlflow.log_params"
+    with patch("train.mlflow.set_tracking_uri"), patch(
+        "train.mlflow.set_experiment"
+    ), patch("train.mlflow.start_run"), patch(
+        "train.mlflow.log_params"
     ), patch(
-        "airflow.scripts.train.mlflow.log_metrics"
+        "train.mlflow.log_metrics"
     ), patch(
-        "airflow.scripts.train.mlflow.log_artifact"
+        "train.mlflow.log_artifact"
     ), patch(
-        "airflow.scripts.train.mlflow.register_model"
+        "train.mlflow.register_model"
     ):
         yield
 
 
 @pytest.fixture
 def mock_fastai():
-    with patch("airflow.scripts.train.ImageDataLoaders.from_folder"), patch(
-        "airflow.scripts.train.cnn_learner"
+    with patch("train.ImageDataLoaders.from_folder"), patch(
+        "train.cnn_learner"
     ) as mock_learner:
         learner = MagicMock()
         learner.validate.return_value = [None, 0.92]
@@ -64,7 +64,7 @@ def temp_image_dir():
 # === TESTS ===
 
 
-@patch("airflow.scripts.train.os.getenv")
+@patch("train.os.getenv")
 def test_download_minio_dataset_success(mock_getenv,
                                         mock_minio,
                                         temp_image_dir):
@@ -88,7 +88,7 @@ def test_download_minio_dataset_success(mock_getenv,
     assert set(os.listdir(path)) == {"dandelion", "grass"}
 
 
-@patch("airflow.scripts.train.os.getenv")
+@patch("train.os.getenv")
 def test_download_minio_dataset_empty_bucket(mock_getenv, mock_minio):
     mock_getenv.side_effect = lambda key: {
         "MLFLOW_S3_ENDPOINT_URL": "http://fake-minio:9000",
@@ -103,7 +103,7 @@ def test_download_minio_dataset_empty_bucket(mock_getenv, mock_minio):
     assert len(os.listdir(path)) == 0
 
 
-@patch("airflow.scripts.train.os.getenv")
+@patch("train.os.getenv")
 def test_main_flow(mock_getenv, mock_minio, mock_mlflow, mock_fastai):
     mock_getenv.side_effect = lambda key: {
         "MLFLOW_API": "http://fake-mlflow:5001",
@@ -126,7 +126,7 @@ def test_main_flow(mock_getenv, mock_minio, mock_mlflow, mock_fastai):
     mock_fastai.export.assert_called_once()
 
 
-@patch("airflow.scripts.train.os.getenv")
+@patch("train.os.getenv")
 def test_minio_connection_error(mock_getenv):
     mock_getenv.side_effect = lambda key: {
         "MLFLOW_S3_ENDPOINT_URL": "http://fake-minio:9000",
@@ -134,21 +134,21 @@ def test_minio_connection_error(mock_getenv):
         "AWS_SECRET_ACCESS_KEY": "fake_secret_key",
     }.get(key, "")
     with patch(
-        "airflow.scripts.train.Minio",
+        "train.Minio",
             side_effect=Exception("Connection failed")
     ):
         with pytest.raises(Exception, match="Connection failed"):
             download_minio_dataset()
 
 
-@patch("airflow.scripts.train.os.getenv")
+@patch("train.os.getenv")
 def test_tempdir_cleanup_on_error(mock_getenv):
     mock_getenv.side_effect = lambda key: {
         "MLFLOW_S3_ENDPOINT_URL": "http://fake-minio:9000",
         "AWS_ACCESS_KEY_ID": "fake_access_key",
         "AWS_SECRET_ACCESS_KEY": "fake_secret_key",
     }.get(key, "")
-    with patch("airflow.scripts.train.Minio") as mock_minio:
+    with patch("train.Minio") as mock_minio:
         mock_minio.return_value.list_objects.side_effect = Exception("Boom")
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch("tempfile.mkdtemp", return_value=temp_dir):

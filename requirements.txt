@@ -10,7 +10,7 @@ tqdm
 requests
 pillow
 scikit-learn
-fastapi
+fastapi>=0.65
 uvicorn
 python-multipart
 pandas==1.5.3
@@ -23,3 +23,4 @@ gradio
 Pillow
 pytest
 flake8
+apache-airflow

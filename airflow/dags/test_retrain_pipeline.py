@@ -1,5 +1,6 @@
 import pytest
 from airflow.models import DagBag
+from retrain_pipeline import *
 
 @pytest.fixture(scope="module")
 def dagbag():

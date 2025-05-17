@@ -1,8 +1,9 @@
 import io
 from PIL import Image
 import pytest
+import gradio as gr
 from unittest.mock import patch, Mock
-from web import prediction
+from web import prediction, build_interface
 
 def test_prediction_none():
     result = prediction(None)
@@ -21,3 +22,7 @@ def test_prediction_success(mock_post):
     result = prediction(img)
     assert "Prédiction : pissenlit" in result
     assert "(Confiance : 0.95)" in result
+    
+def test_build_interface_returns_blocks():
+    interface = build_interface()
+    assert isinstance(interface, gr.Blocks)
