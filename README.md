@@ -17,7 +17,7 @@ Stacks utilisées :
 - Docker pour conteneurisation 
 
 1. Configuration
-copier le fihcier .env.example dans votre dossier en local et remplir les variables
+copier le fichier .env.example dans votre dossier en local et remplir les variables
 
 2. Lancement avec les images Docker disponibles sur Docker Hub 
 2.1 Utilisez le fichier docker-compose.prod.yml à laide de la commande : docker compose -f docker-compose.prod.yml up -d  
