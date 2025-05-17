@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.base
+    networks:
+      - backend
 
   # PostgreSQL
   postgres:
@@ -22,6 +24,8 @@ services:
       interval: 5s
       retries: 5
     restart: always
+    networks:
+      - backend
 
   # MinIO
   minio:
@@ -33,7 +37,7 @@ services:
       - MINIO_CONSOLE_PORT=${MINIO_CONSOLE_PORT}
     ports:
       - "9000:9000"
-      - "${MINIO_CONSOLE_PORT}:9001"
+      - "${MINIO_CONSOLE_PORT}:9003"
     command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     volumes:
       - minio-data:/data
@@ -43,6 +47,8 @@ services:
       timeout: 20s
       retries: 3
     restart: always
+    networks:
+      - backend
 
   # MinIO Client
   minio-client:
@@ -57,6 +63,8 @@ services:
       mc mb -p myminio/models || true &&
       mc mb -p myminio/data || true
       "
+    networks:
+      - backend
 
   # API
   api:
@@ -79,7 +87,23 @@ services:
       minio:
         condition: service_healthy
     restart: always
+    networks:
+      - backend
 
+  # Gradio 
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+    ports:
+      - "7860:7860"
+    volumes:
+    #only for development
+      - ./src/webapp:/app
+    command: python /app/web.py
+    restart: always
+    networks:
+      - backend
   # MLflow
   mlflow:
     build:
@@ -87,7 +111,7 @@ services:
       dockerfile: Dockerfile.mlflow
     env_file: .env
     ports:
-      - "5000:5000"
+      - "5001:5001"
     environment:
       - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
@@ -98,10 +122,13 @@ services:
       --backend-store-uri ${MLFLOW_TRACKING_URI}
       --default-artifact-root ${MLFLOW_ARTIFACT_ROOT}
       --host 0.0.0.0
+      --port 5001
     depends_on:
       - postgres
       - minio
     restart: always
+    networks:
+      - backend
 
   # Airflow Services
   airflow-init-dirs:
@@ -116,6 +143,8 @@ services:
       - ./airflow/scripts:/opt/airflow/scripts
     entrypoint: /bin/bash
     command: -c "mkdir -p /opt/airflow/dags /opt/airflow/logs/scheduler /opt/airflow/logs/webserver /opt/airflow/plugins /opt/airflow/scripts /opt/airflow/data && chmod -R 777 /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins /opt/airflow/scripts"
+    networks:
+      - backend
 
   airflow-webserver:
     build:
@@ -144,6 +173,8 @@ services:
       - "8088:8080"
     command: webserver
     restart: always
+    networks:
+      - backend
 
   airflow-scheduler:
     build:
@@ -171,6 +202,8 @@ services:
       - ./airflow/scripts:/opt/airflow/scripts
     command: scheduler
     restart: always
+    networks:
+      - backend
 
   airflow-init:
     build:
@@ -191,7 +224,12 @@ services:
       - ./airflow/plugins:/opt/airflow/plugins
     entrypoint: /bin/bash
     command: -c "airflow db init && airflow users create --username ${AIRFLOW_USER} --password ${AIRFLOW_PASS} --firstname ${AIRFLOW_FIRST_NAME} --lastname ${AIRFLOW_LAST_NAME} --role ${AIRFLOW_ROLE} --email ${AIRFLOW_EMAIL}"
+    networks:
+      - backend
 
 volumes:
   postgres-db-volume:
   minio-data:
+
+networks:
+  backend:

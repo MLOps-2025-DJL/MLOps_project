@@ -40,12 +40,12 @@ def download_minio_dataset(bucket_name="images", local_dir="/tmp/images"):
                 f.write(response.read())
             response.close()
 
-    print(f"✅ Données copiées dans {local_dir}")
+    print(f"Données copiées dans {local_dir}")
     return local_dir
 
 def main():
     # Configuration MLflow via variables d'environnement
-    mlflow.set_tracking_uri(os.getenv("http://mlflow:5000"))
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_API"))
     mlflow.set_experiment("classification_dandelion_grass_fastai")
 
     # Données depuis MinIO
@@ -87,7 +87,7 @@ def main():
         })
 
         # Export et enregistrement du modèle
-        model_dir = os.path.abspath("saved_models")
+        model_dir = os.path.abspath("/opt/airflow/scripts/saved_models")
         os.makedirs(model_dir, exist_ok=True)
         export_path = os.path.join(model_dir, "export.pkl")
         learn.export(export_path)

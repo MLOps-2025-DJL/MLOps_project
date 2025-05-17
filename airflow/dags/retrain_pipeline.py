@@ -14,26 +14,36 @@ default_args = {
 with DAG(
     'retrain_model_pipeline',
     default_args=default_args,
-    description='Réentraîner automatiquement le modèle et le loguer dans MLflow',
-    schedule_interval='@weekly',  # ou None pour manuel
+    description='Pipeline de réentraînement avec MLflow + MinIO',
+    schedule_interval='@weekly',
     start_date=datetime(2025, 5, 10),
     catchup=False,
     tags=['mlops'],
 ) as dag:
 
-    # 1. Télécharger les nouvelles images depuis PostgreSQL et les stocker dans MinIO
-    download_task = BashOperator(
+    insert_metadata = BashOperator(
+        task_id='insert_metadata_to_postgres',
+        bash_command='python3 /opt/airflow/scripts/data/insert_metadata_to_postgres.py'
+    )
+
+    download_images = BashOperator(
         task_id='download_images',
         bash_command='python3 /opt/airflow/scripts/download.py'
     )
 
-    # 2. Réentraîner le modèle avec les nouvelles données
-    train_task = BashOperator(
+    retrain_model = BashOperator(
         task_id='retrain_model',
         bash_command='python3 /opt/airflow/scripts/train.py'
     )
 
-    # (Optionnel) 3. Ajouter d’autres étapes ici comme une notification ou un déploiement
+    save_model = BashOperator(
+        task_id='save_model_to_minio',
+        bash_command='python3 /opt/airflow/scripts/save_model.py'
+    )
 
-    # Définir l'ordre des tâches
-    download_task >> train_task
+    redeploy_model = BashOperator(
+        task_id='redeploy_model',
+        bash_command='curl -X POST http://api:5000/reload || echo "No redeploy endpoint available."'
+    )
+
+    insert_metadata >> download_images >> retrain_model >> save_model >> redeploy_model

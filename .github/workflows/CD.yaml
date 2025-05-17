@@ -1,0 +1,63 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Recreate .env from secrets
+        run: |
+          cat <<'EOF' > .env
+          # ===== PostgreSQL =====
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=plants_db
+          POSTGRES_HOST=postgres
+          POSTGRES_PORT=5432
+
+          # ===== MinIO =====
+          MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
+          MINIO_CONSOLE_PORT=9003
+
+          # ===== Compatibilité S3 (MLflow/Airflow) =====
+          AWS_ACCESS_KEY_ID=${{ secrets.MINIO_ROOT_USER }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.MINIO_ROOT_PASSWORD }}
+          MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+
+          # ===== MLflow =====
+          MLFLOW_TRACKING_URI=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/mlflow
+          MLFLOW_ARTIFACT_ROOT=s3://models
+          MLFLOW_API=http://mlflow:5001
+
+          # ===== Airflow =====
+          AIRFLOW__CORE__EXECUTOR=LocalExecutor
+          AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/airflow
+          AIRFLOW__CORE__LOAD_EXAMPLES=False
+          AIRFLOW_USER=${{ secrets.AIRFLOW_USER }}
+          AIRFLOW_PASS=${{ secrets.AIRFLOW_PASS }}
+          AIRFLOW_FIRST_NAME=Admin
+          AIRFLOW_LAST_NAME=User
+          AIRFLOW_ROLE=Admin
+          AIRFLOW_EMAIL=admin@example.com
+          EOF
+          echo "Recreated .env file from secrets"
+
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile.base -t base .
+      - name: Deploy with Docker Compose
+        run: |
+          docker compose up -d

@@ -16,3 +16,6 @@ COPY requirements.txt .
 # Mettre à jour pip et installer les dépendances
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
+
+# Copie du code après l’installation pour profiter du cache Docker
+COPY . .
