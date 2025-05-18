@@ -19,7 +19,7 @@ Stacks utilisées :
 1. Configuration
 Copier le fichier .env.example dans votre dossier en local et remplir les variables
 
-2. Environnement de Production : Lancement avec les images Docker disponibles sur Docker Hub 
+2. Environnement de Production : Lancement avec les images Docker disponibles sur Docker Hub  
 2.1 Utilisez le fichier docker-compose.prod.yml à l'aide de la commande : 
 docker compose -f docker-compose.prod.yml up -d  
 2.2 Lancez le DAG dans l’interface Airflow : http://localhost:8088  
@@ -35,7 +35,7 @@ docker compose -f docker-compose.prod.yml up -d
 docker build -f Dockerfile.base -t base .  
 3.2⁠ ⁠Démarrer les services avec Docker Compose : 
 docker compose up -d  
-3.⁠ ⁠Lancer le DAG dans Airflow  
+3.3⁠ ⁠Lancer le DAG dans Airflow :
 Ouvre l’interface web d’Airflow (accessible à l’adresse http://localhost:8088). Lancer le DAG et accéder aux services indiqués plus haut  
 
 
