@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock, mock_open
 import io
 import os
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from PIL import Image
 import numpy as np
