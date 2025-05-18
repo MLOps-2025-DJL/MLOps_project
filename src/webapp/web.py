@@ -1,11 +1,13 @@
 """
 A Gradio web app with drag and drop for image and returns the output of the `prediction()` function.
 """
+
 import requests
 from typing import Union
 import gradio as gr
 from PIL import Image
 import io
+
 
 def prediction(img: Union[Image.Image, None]) -> str:
     """Return a message based on the provided image.
@@ -13,12 +15,12 @@ def prediction(img: Union[Image.Image, None]) -> str:
     """
     if img is None:
         return "Aucune image reçue. Glissez-déposez une image à gauche."
-    
+
     # Convert the image to bytes
     img_bytes = io.BytesIO()
     img.save(img_bytes, format="PNG")
     img_bytes.seek(0)
-    
+
     api_url = "http://localhost:8000/predict"
     files = {"file": ("image.png", img_bytes, "image/png")}
     try:
@@ -29,10 +31,11 @@ def prediction(img: Union[Image.Image, None]) -> str:
     except requests.RequestException as e:
         return f"Erreur lors de l'appel à l'API : {str(e)}"
 
+
 beige_theme = gr.themes.Soft().set(
-    body_background_fill="#f8f5eb",        
-    block_background_fill="#fffdf8",       
-    block_radius="12px",                  
+    body_background_fill="#f8f5eb",
+    block_background_fill="#fffdf8",
+    block_radius="12px",
     shadow_drop="0 2px 4px rgba(0,0,0,0.05)",
     button_primary_background_fill="#d2b48c",
     button_primary_text_color="#ffffff",
@@ -75,10 +78,11 @@ CSS = """
 }
 """
 
+
 def build_interface() -> gr.Blocks:
     """Construct and return the Gradio interface."""
 
-    with gr.Blocks(theme=beige_theme, css=CSS,title="Image Prediction") as demo:
+    with gr.Blocks(theme=beige_theme, css=CSS, title="Image Prediction") as demo:
         gr.Markdown(
             """
             <div class="hero">
@@ -117,4 +121,4 @@ if __name__ == "__main__":
     demo.queue()
 
     # Launch the app locally on URL (by default http://localhost:7860)
-    demo.launch(server_name="0.0.0.0",server_port=7860)
+    demo.launch(server_name="0.0.0.0", server_port=7860)

@@ -11,14 +11,16 @@ conn = psycopg2.connect(
 cursor = conn.cursor()
 
 # Create a table if not exist
-cursor.execute("""
+cursor.execute(
+    """
     CREATE TABLE IF NOT EXISTS plants_data (
         id SERIAL PRIMARY KEY,
         url_source TEXT NOT NULL,
         url_s3 TEXT NOT NULL,
         label TEXT CHECK(label IN ('dandelion', 'grass')) NOT NULL
     );
-""")
+"""
+)
 
 # Teplates of URLs
 source_url_template = "https://raw.githubusercontent.com/btphan95/greenr-airflow/refs/heads/master/data/{label}/{index:08d}.jpg"
@@ -33,14 +35,13 @@ for label in labels:
     for index in range(num_images):
         url_source = source_url_template.format(label=label, index=index)
         url_s3 = s3_url_template.format(label=label, index=index)
-        
+
         # Verificar si ya existe para no duplicar
         cursor.execute(
-            "SELECT 1 FROM plants_data WHERE url_s3 = %s LIMIT 1;",
-            (url_s3,)
+            "SELECT 1 FROM plants_data WHERE url_s3 = %s LIMIT 1;", (url_s3,)
         )
         exists = cursor.fetchone()
-        
+
         if not exists:
             cursor.execute(
                 "INSERT INTO plants_data (url_source, url_s3, label) VALUES (%s, %s, %s)",

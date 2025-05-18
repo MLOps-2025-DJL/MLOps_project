@@ -24,10 +24,12 @@ model = None
 
 def find_latest_model():
     # Connexion à MinIO
-    s3 = boto3.client('s3',
-                      endpoint_url=os.getenv("MLFLOW_S3_ENDPOINT_URL"), 
-                      aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
-                      aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD"))
+    s3 = boto3.client(
+        's3',
+        endpoint_url=os.getenv("MLFLOW_S3_ENDPOINT_URL"), 
+        aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
+        aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD")
+        )
     
     latest_model_info = None
 
@@ -64,10 +66,12 @@ def load_model():
     key = latest_model_info['Key']
 
     # Télécharger le fichier .pkl
-    s3 = boto3.client('s3',
-                      endpoint_url=os.getenv("MLFLOW_S3_ENDPOINT_URL"), 
-                      aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
-                      aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD"))
+    s3 = boto3.client(
+        's3',
+        endpoint_url=os.getenv("MLFLOW_S3_ENDPOINT_URL"), 
+        aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
+        aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD")
+        )
     obj = s3.get_object(Bucket=bucket_name, Key=key)
     model_bytes = BytesIO(obj['Body'].read())
 

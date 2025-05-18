@@ -36,8 +36,7 @@ def download_minio_dataset(bucket_name="images", local_dir="/tmp/images"):
     objects = minio_client.list_objects(bucket_name, recursive=True)
     for obj in objects:
         if obj.object_name.lower().endswith((".jpg", ".png")):
-            label = "dandelion" if "dandelion" in obj.object_name.lower() \
-                else "grass"
+            label = "dandelion" if "dandelion" in obj.object_name.lower() else "grass"
             label_dir = os.path.join(local_dir, label)
             os.makedirs(label_dir, exist_ok=True)
             filename = os.path.basename(obj.object_name)

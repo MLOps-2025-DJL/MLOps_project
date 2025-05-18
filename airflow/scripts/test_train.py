@@ -20,16 +20,10 @@ def mock_minio():
 
 @pytest.fixture
 def mock_mlflow():
-    with patch("train.mlflow.set_tracking_uri"), patch(
-        "train.mlflow.set_experiment"
-    ), patch("train.mlflow.start_run"), patch(
-        "train.mlflow.log_params"
-    ), patch(
-        "train.mlflow.log_metrics"
-    ), patch(
-        "train.mlflow.log_artifact"
-    ), patch(
-        "train.mlflow.register_model"
+    with patch("train.mlflow.set_tracking_uri"
+    ), patch("train.mlflow.set_experiment"), patch("train.mlflow.start_run"
+    ), patch("train.mlflow.log_params"), patch("train.mlflow.log_metrics"
+    ), patch("train.mlflow.log_artifact"), patch("train.mlflow.register_model"
     ):
         yield
 
@@ -65,9 +59,7 @@ def temp_image_dir():
 
 
 @patch("train.os.getenv")
-def test_download_minio_dataset_success(mock_getenv,
-                                        mock_minio,
-                                        temp_image_dir):
+def test_download_minio_dataset_success(mock_getenv, mock_minio, temp_image_dir):
     mock_getenv.side_effect = lambda key: {
         "MLFLOW_S3_ENDPOINT_URL": "http://fake-minio:9000",
         "AWS_ACCESS_KEY_ID": "fake_access_key",
@@ -133,10 +125,7 @@ def test_minio_connection_error(mock_getenv):
         "AWS_ACCESS_KEY_ID": "fake_access_key",
         "AWS_SECRET_ACCESS_KEY": "fake_secret_key",
     }.get(key, "")
-    with patch(
-        "train.Minio",
-            side_effect=Exception("Connection failed")
-    ):
+    with patch("train.Minio", side_effect=Exception("Connection failed")):
         with pytest.raises(Exception, match="Connection failed"):
             download_minio_dataset()
 
