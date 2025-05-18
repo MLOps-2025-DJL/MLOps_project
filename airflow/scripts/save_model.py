@@ -17,7 +17,9 @@ OBJECT_NAME = MODEL_FILENAME
 
 # === Check if model file exists ===
 if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"Model file not found at {MODEL_PATH}. Ensure it is saved during training.")
+    raise FileNotFoundError(
+        f"Model file not found at {MODEL_PATH}. Ensure it is saved during training."
+    )
 
 # === Connect to MinIO ===
 client = Minio(
@@ -39,4 +41,6 @@ client.fput_object(
     content_type="application/octet-stream"
 )
 
-print(f"Model '{MODEL_FILENAME}' successfully uploaded to MinIO in bucket '{BUCKET_NAME}' as object '{OBJECT_NAME}'")
+print(
+    f"Model '{MODEL_FILENAME}' successfully uploaded to MinIO in bucket '{BUCKET_NAME}' as object '{OBJECT_NAME}'"
+)

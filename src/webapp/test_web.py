@@ -5,9 +5,11 @@ import gradio as gr
 from unittest.mock import patch, Mock
 from web import prediction, build_interface
 
+
 def test_prediction_none():
     result = prediction(None)
     assert result == "Aucune image reçue. Glissez-déposez une image à gauche."
+
 
 @patch("web.requests.post")
 def test_prediction_success(mock_post):
@@ -22,7 +24,8 @@ def test_prediction_success(mock_post):
     result = prediction(img)
     assert "Prédiction : pissenlit" in result
     assert "(Confiance : 0.95)" in result
-    
+
+
 def test_build_interface_returns_blocks():
     interface = build_interface()
     assert isinstance(interface, gr.Blocks)
