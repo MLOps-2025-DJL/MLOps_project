@@ -38,4 +38,3 @@ docker compose up -d
 3.⁠ ⁠Lancer le DAG dans Airflow  
 Ouvre l’interface web d’Airflow (accessible à l’adresse http://localhost:8088). Lancer le DAG et accéder aux services indiqués plus haut  
 
-
