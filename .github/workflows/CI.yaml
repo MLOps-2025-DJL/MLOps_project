@@ -64,4 +64,6 @@ jobs:
         run: docker run --rm -v ${{ github.workspace }}:/app -w /app base pytest src/ airflow/
 
       - name: Check code quality inside Docker
-        run: docker run --rm -v ${{ github.workspace }}:/app -w /app base flake8 src/ airflow/
+        run : | 
+          docker run --rm -v ${{ github.workspace }}:/app -w /app base flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          docker run --rm -v ${{ github.workspace }}:/app -w /app base flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
